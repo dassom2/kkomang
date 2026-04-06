@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>표절검사 결과 - 비교 문서 목록</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    background: #f5f6f8;
+    color: #333;
+    line-height: 1.6;
+  }
+
+  .container {
+    max-width: 800px;
+    margin: 32px auto;
+    padding: 0 16px;
+  }
+
+  /* Header */
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px 12px 0 0;
+    border-bottom: 2px solid #e74c5e;
+  }
+  .panel-header h2 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #222;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-header h2 .icon {
+    width: 24px; height: 24px;
+    background: #e74c5e;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .btn-exclude {
+    padding: 8px 16px;
+    background: #fff;
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #555;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-exclude:hover { background: #f5f5f5; border-color: #bbb; }
+  .btn-exclude.active { background: #e74c5e; color: #fff; border-color: #e74c5e; }
+
+  /* Source Group */
+  .source-group {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-top: none;
+  }
+  .source-group:last-child {
+    border-radius: 0 0 12px 12px;
+  }
+
+  .source-header {
+    display: flex;
+    align-items: center;
+    padding: 14px 20px;
+    background: #fafafa;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .source-header:hover { background: #f0f0f0; }
+
+  .source-checkbox {
+    margin-right: 12px;
+    width: 18px; height: 18px;
+    accent-color: #e74c5e;
+    cursor: pointer;
+    display: none;
+  }
+  .source-checkbox.visible { display: block; }
+
+  .source-rate {
+    min-width: 48px;
+    padding: 4px 10px;
+    background: #e74c5e;
+    color: #fff;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    margin-right: 12px;
+  }
+  .source-rate.low { background: #f0a030; }
+  .source-rate.vlow { background: #8bc34a; }
+
+  .source-domain {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .source-domain .count {
+    font-size: 12px;
+    color: #888;
+    font-weight: 400;
+  }
+
+  .source-toggle {
+    width: 24px; height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.25s;
+    color: #999;
+  }
+  .source-toggle.open { transform: rotate(180deg); }
+
+  /* Document List */
+  .doc-list {
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+  }
+  .doc-list.collapsed { max-height: 0 !important; }
+
+  .doc-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 12px 20px 12px 52px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background 0.15s;
+  }
+  .doc-item:hover { background: #fafcff; }
+
+  .doc-checkbox {
+    margin-right: 12px;
+    margin-top: 3px;
+    width: 16px; height: 16px;
+    accent-color: #e74c5e;
+    cursor: pointer;
+    display: none;
+  }
+  .doc-checkbox.visible { display: block; }
+
+  .doc-rate {
+    min-width: 44px;
+    padding: 3px 8px;
+    border: 1px solid #e74c5e;
+    color: #e74c5e;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    margin-right: 12px;
+    margin-top: 1px;
+    flex-shrink: 0;
+  }
+
+  .doc-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .doc-title {
+    font-size: 14px;
+    color: #333;
+    font-weight: 500;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .doc-title .new-tab {
+    color: #4a90d9;
+    font-size: 12px;
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .doc-title .new-tab:hover { text-decoration: underline; }
+
+  .doc-source {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 6px;
+  }
+
+  .doc-sentences {
+    margin-top: 6px;
+  }
+  .sentence {
+    position: relative;
+    padding: 8px 12px;
+    margin-bottom: 4px;
+    background: #fff8f8;
+    border-left: 3px solid #e74c5e;
+    border-radius: 0 6px 6px 0;
+    font-size: 13px;
+    color: #555;
+    line-height: 1.5;
+  }
+  .sentence .highlight {
+    background: #ffe0e4;
+    padding: 1px 2px;
+    border-radius: 2px;
+  }
+
+  /* Source Info Popup */
+  .source-info-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    background: #f0f0f0;
+    border: none;
+    border-radius: 4px;
+    font-size: 11px;
+    color: #666;
+    cursor: pointer;
+    margin-left: 8px;
+    transition: background 0.15s;
+  }
+  .source-info-btn:hover { background: #e0e0e0; }
+
+  .source-info-popup {
+    display: none;
+    position: relative;
+    margin: 0 20px 12px 52px;
+    padding: 16px;
+    background: #1e1e2e;
+    border-radius: 8px;
+    color: #ccc;
+    font-size: 13px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    line-height: 1.8;
+  }
+  .source-info-popup.active { display: block; }
+  .source-info-popup .label { color: #82aaff; }
+  .source-info-popup .value { color: #c3e88d; }
+  .source-info-popup .link {
+    color: #89ddff;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .source-info-popup .close-popup {
+    position: absolute;
+    top: 8px; right: 12px;
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  .source-info-popup .exclude-link {
+    display: inline-block;
+    margin-top: 8px;
+    color: #ff5370;
+    text-decoration: underline;
+    cursor: pointer;
+    font-family: 'Pretendard', sans-serif;
+  }
+
+  /* More Button */
+  .btn-more-docs {
+    display: block;
+    width: calc(100% - 104px);
+    margin: 0 auto 0 52px;
+    padding: 10px;
+    background: #fafafa;
+    border: 1px dashed #d0d0d0;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #666;
+    cursor: pointer;
+    text-align: center;
+    margin-bottom: 12px;
+    transition: all 0.15s;
+  }
+  .btn-more-docs:hover { background: #f0f0f0; border-color: #bbb; }
+
+  /* Badge */
+  .badge-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px; height: 20px;
+    background: #e74c5e;
+    color: #fff;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 700;
+    margin-right: 4px;
+    flex-shrink: 0;
+  }
+
+  /* Annotation Labels */
+  .annotation {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px; height: 22px;
+    background: #e74c5e;
+    color: #fff;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 700;
+    position: absolute;
+    z-index: 10;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    padding: 12px 24px;
+    background: #333;
+    color: #fff;
+    border-radius: 8px;
+    font-size: 14px;
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 1000;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .container { margin: 16px auto; }
+    .doc-item { padding-left: 20px; }
+    .btn-more-docs { margin-left: 20px; width: calc(100% - 40px); }
+    .source-info-popup { margin-left: 20px; margin-right: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Panel Header -->
+  <div class="panel-header">
+    <h2>
+      <span class="icon">CK</span>
+      비교 문서 목록
+    </h2>
+    <button class="btn-exclude" id="btnExclude" onclick="toggleExcludeMode()">
+      선택 문서 제외
+    </button>
+  </div>
+
+  <!-- Source Group 1 -->
+  <div class="source-group">
+    <div class="source-header" onclick="toggleSource(this)">
+      <input type="checkbox" class="source-checkbox" onchange="event.stopPropagation()">
+      <span class="source-rate">90%</span>
+      <span class="source-domain">
+        repo.klce.re.kr
+        <span class="count">[15]</span>
+      </span>
+      <span class="source-toggle open">&#9660;</span>
+    </div>
+    <div class="doc-list">
+      <!-- Doc 1 -->
+      <div class="doc-item">
+        <input type="checkbox" class="doc-checkbox" onchange="event.stopPropagation()">
+        <span class="doc-rate">33%</span>
+        <div class="doc-info">
+          <div class="doc-title">
+            repo.klce.re.kr
+            <span class="badge-num" style="background:#4a90d9;font-size:10px;">&#10003;</span>
+            <button class="source-info-btn" onclick="togglePopup(this)">&#9432; 출처정보</button>
+          </div>
+          <div class="doc-source">교육과정: 카피킬러에서 수집</div>
+          <div class="doc-sentences">
+            <div class="sentence">
+              - 표절문장: 부모 선정은 다대 관련된 관련 전문 인력 중 별도 협의로 인력을 선정 하고, 위원은 심위원 으로...
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Source Info Popup (hidden) -->
+      <div class="source-info-popup" id="popup1">
+        <button class="close-popup" onclick="this.parentElement.classList.remove('active')">&times;</button>
+        <div><span class="label">lbl_title : </span><span class="value">파일명</span></div>
+        <div><span class="label">lbl_writer_id : </span><span class="value">저자</span></div>
+        <div><span class="label">title : </span><span class="value">서비스 이용약관 (필수) - 대입 면접 합격의 지름길, 몬스터T</span></div>
+        <div><span class="label">writer_id : </span></div>
+        <div><span class="label">pubinfo : </span></div>
+        <div><span class="label">url : </span><span class="link">https://monster.copykiller.com/signup</span></div>
+        <div><span class="label">has_title : </span><span class="value">true</span></div>
+        <div><span class="label">domain_id : </span><span class="value">blackhole_coc</span></div>
+        <div><span class="label">uri : </span><span class="value">aff62ec180209735de6bae7ef9bf986356b2e295</span></div>
+        <div><span class="label">id : </span></div>
+        <div><span class="label">regdate2 : </span><span class="value">2023-01-05 09:18:37.0</span></div>
+        <span class="exclude-link">제외문서 등록하기</span>
+      </div>
+
+      <!-- Doc 2 -->
+      <div class="doc-item">
+        <input type="checkbox" class="doc-checkbox">
+        <span class="doc-rate">15%</span>
+        <div class="doc-info">
+          <div class="doc-title">카피킬러 기본 결과레터04 - 5유형...</div>
+          <div class="doc-source">repo.klce.re.kr</div>
+          <div class="doc-sentences">
+            <div class="sentence">
+              가장 <span class="highlight">배타적인 비율 중 하나는</span> 교 학습과의 관련 가능성을 살펴보는 것입니다.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Doc 3 -->
+      <div class="doc-item">
+        <input type="checkbox" class="doc-checkbox">
+        <span class="doc-rate">15%</span>
+        <div class="doc-info">
+          <div class="doc-title">카피킬러 기본 결과레터04 - 5유형...</div>
+          <div class="doc-source">repo.klce.re.kr</div>
+          <div class="doc-sentences">
+            <div class="sentence">
+              가장 <span class="highlight">배타적인 화면 중 하나는</span> 의 학습과의 관련성을 살펴보는 것입니다.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Doc 4 -->
+      <div class="doc-item">
+        <input type="checkbox" class="doc-checkbox">
+        <span class="doc-rate">15%</span>
+        <div class="doc-info">
+          <div class="doc-title">카피킬러 기본 결과레터04 - 5유형...</div>
+          <div class="doc-source">repo.klce.re.kr</div>
+        </div>
+      </div>
+
+      <!-- Doc 5 -->
+      <div class="doc-item">
+        <input type="checkbox" class="doc-checkbox">
+        <span class="doc-rate">15%</span>
+        <div class="doc-info">
+          <div class="doc-title">카피킬러 기본 결과레터04 - 5유형...</div>
+          <div class="doc-source">repo.klce.re.kr</div>
+        </div>
+      </div>
+
+      <button class="btn-more-docs" onclick="showMoreDocs(this)">
+        &#9660; 비교 문서 더보기 (10개 더)
+      </button>
+    </div>
+  </div>
+
+  <!-- Source Group 2 -->
+  <div class="source-group">
+    <div class="source-header" onclick="toggleSource(this)">
+      <input type="checkbox" class="source-checkbox">
+      <span class="source-rate low">55%</span>
+      <span class="source-domain">
+        www.coursehero.com
+        <span class="count">[11]</span>
+      </span>
+      <span class="source-toggle">&#9660;</span>
+    </div>
+    <div class="doc-list collapsed">
+      <div class="doc-item">
+        <input type="checkbox" class="doc-checkbox">
+        <span class="doc-rate">22%</span>
+        <div class="doc-info">
+          <div class="doc-title">
+            주유의 경제 시대가는 어떻구 져...
+            <a class="new-tab" href="#" onclick="event.preventDefault(); showToast('새 탭에서 열기')">&#8599; 새 탭</a>
+          </div>
+          <div class="doc-source">www.coursehero.com</div>
+          <div class="doc-sentences">
+            <div class="sentence">
+              주요국의 <span class="highlight">출산율 저하 정책을</span> 비교 분석하여 해당 자료의 표절 문장을 확인합니다.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="doc-item">
+        <input type="checkbox" class="doc-checkbox">
+        <span class="doc-rate">18%</span>
+        <div class="doc-info">
+          <div class="doc-title">학위논문: 교육과정의 변천사 연구</div>
+          <div class="doc-source">www.coursehero.com</div>
+        </div>
+      </div>
+      <div class="doc-item">
+        <input type="checkbox" class="doc-checkbox">
+        <span class="doc-rate">10%</span>
+        <div class="doc-info">
+          <div class="doc-title">사회복지 실습 보고서 - 노인복지센터</div>
+          <div class="doc-source">www.coursehero.com</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Source Group 3 -->
+  <div class="source-group">
+    <div class="source-header" onclick="toggleSource(this)">
+      <input type="checkbox" class="source-checkbox">
+      <span class="source-rate vlow">15%</span>
+      <span class="source-domain">
+        repo.klce.re.kr
+        <span class="count">[10]</span>
+      </span>
+      <span class="source-toggle">&#9660;</span>
+    </div>
+    <div class="doc-list collapsed">
+      <div class="doc-item">
+        <input type="checkbox" class="doc-checkbox">
+        <span class="doc-rate">7%</span>
+        <div class="doc-info">
+          <div class="doc-title">교육평가 기말시험 정리 요약본</div>
+          <div class="doc-source">repo.klce.re.kr</div>
+        </div>
+      </div>
+      <div class="doc-item">
+        <input type="checkbox" class="doc-checkbox">
+        <span class="doc-rate">5%</span>
+        <div class="doc-info">
+          <div class="doc-title">한국교육과정평가원 연구보고서</div>
+          <div class="doc-source">repo.klce.re.kr</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Source Group 4 -->
+  <div class="source-group" style="border-radius: 0 0 12px 12px;">
+    <div class="source-header" onclick="toggleSource(this)">
+      <input type="checkbox" class="source-checkbox">
+      <span class="source-rate vlow">7%</span>
+      <span class="source-domain">
+        repo.klce.re.kr
+        <span class="count">[10]</span>
+      </span>
+      <span class="source-toggle">&#9660;</span>
+    </div>
+    <div class="doc-list collapsed">
+      <div class="doc-item">
+        <input type="checkbox" class="doc-checkbox">
+        <span class="doc-rate">4%</span>
+        <div class="doc-info">
+          <div class="doc-title">통계분석 방법론 비교 연구</div>
+          <div class="doc-source">repo.klce.re.kr</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // Toggle source group expand/collapse
+  function toggleSource(header) {
+    const docList = header.nextElementSibling;
+    const toggle = header.querySelector('.source-toggle');
+    docList.classList.toggle('collapsed');
+    toggle.classList.toggle('open');
+  }
+
+  // Toggle exclude mode (show checkboxes)
+  function toggleExcludeMode() {
+    const btn = document.getElementById('btnExclude');
+    btn.classList.toggle('active');
+    const isActive = btn.classList.contains('active');
+    btn.textContent = isActive ? '선택 문서 제외 완료' : '선택 문서 제외';
+
+    document.querySelectorAll('.source-checkbox, .doc-checkbox').forEach(cb => {
+      cb.classList.toggle('visible', isActive);
+      if (!isActive) cb.checked = false;
+    });
+
+    if (!isActive) {
+      showToast('선택한 문서가 제외되어 표절률이 재계산됩니다.');
+    }
+  }
+
+  // Toggle source info popup
+  function togglePopup(btn) {
+    event.stopPropagation();
+    const docItem = btn.closest('.doc-item');
+    const popup = docItem.nextElementSibling;
+    if (popup && popup.classList.contains('source-info-popup')) {
+      popup.classList.toggle('active');
+    }
+  }
+
+  // Show more documents
+  function showMoreDocs(btn) {
+    const isExpanded = btn.dataset.expanded === 'true';
+    if (isExpanded) {
+      btn.innerHTML = '&#9660; 비교 문서 더보기 (10개 더)';
+      btn.dataset.expanded = 'false';
+    } else {
+      btn.innerHTML = '&#9650; 비교 문서 접기';
+      btn.dataset.expanded = 'true';
+      showToast('나머지 비교 문서 10개를 불러왔습니다.');
+    }
+  }
+
+  // Toast notification
+  function showToast(message) {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2500);
+  }
+
+  // Auto-open first source
+  document.addEventListener('DOMContentLoaded', () => {
+    const firstToggle = document.querySelector('.source-toggle');
+    if (firstToggle) firstToggle.classList.add('open');
+  });
+</script>
+</body>
+</html>
