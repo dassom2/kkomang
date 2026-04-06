@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>꼬망이네 집</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: #faf9f7;
+      color: #333;
+    }
+
+    /* 헤더 */
+    header {
+      background: linear-gradient(135deg, #f5e6d3 0%, #e8d5c4 100%);
+      text-align: center;
+      padding: 48px 20px 40px;
+      border-bottom: 1px solid #e0d5c8;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #5a4a3a;
+      margin-bottom: 6px;
+    }
+
+    header p {
+      font-size: 0.95rem;
+      color: #8a7a6a;
+      font-weight: 300;
+    }
+
+    /* 네비게이션 */
+    nav {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    nav button {
+      padding: 8px 20px;
+      border: 1px solid #c8b8a8;
+      background: #fff;
+      border-radius: 20px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      color: #5a4a3a;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    nav button.active,
+    nav button:hover {
+      background: #5a4a3a;
+      color: #fff;
+      border-color: #5a4a3a;
+    }
+
+    /* 갤러리 */
+    .gallery {
+      max-width: 1000px;
+      margin: 32px auto;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .gallery-item {
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .gallery-item:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+
+    .gallery-item img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      display: block;
+    }
+
+    .gallery-item .caption {
+      padding: 10px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .gallery-item .caption span {
+      font-size: 0.82rem;
+      color: #666;
+    }
+
+    .like-btn {
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: transform 0.2s;
+      padding: 2px;
+    }
+
+    .like-btn:hover { transform: scale(1.2); }
+    .like-btn.liked { animation: pop 0.3s ease; }
+
+    @keyframes pop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.4); }
+      100% { transform: scale(1); }
+    }
+
+    /* 라이트박스 */
+    .lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .lightbox.open { display: flex; }
+
+    .lightbox img {
+      max-width: 90vw;
+      max-height: 85vh;
+      border-radius: 8px;
+      object-fit: contain;
+    }
+
+    .lightbox-close {
+      position: absolute;
+      top: 20px;
+      right: 28px;
+      color: #fff;
+      font-size: 2rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    .lightbox-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #fff;
+      font-size: 2.5rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 10px;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+
+    .lightbox-nav:hover { opacity: 1; }
+    .lightbox-prev { left: 16px; }
+    .lightbox-next { right: 16px; }
+
+    .lightbox-content {
+      display: flex;
+      gap: 20px;
+      max-width: 95vw;
+      max-height: 90vh;
+      align-items: stretch;
+    }
+
+    .lightbox-content > img {
+      max-width: 60vw;
+      max-height: 85vh;
+      border-radius: 8px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+
+    .comment-panel {
+      width: 300px;
+      min-width: 260px;
+      background: #fff;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .comment-panel-header {
+      padding: 16px;
+      border-bottom: 1px solid #eee;
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #5a4a3a;
+    }
+
+    .comment-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 16px;
+    }
+
+    .comment-item {
+      margin-bottom: 14px;
+    }
+
+    .comment-item .comment-author {
+      font-weight: 600;
+      font-size: 0.82rem;
+      color: #5a4a3a;
+    }
+
+    .comment-item .comment-time {
+      font-size: 0.72rem;
+      color: #aaa;
+      margin-left: 6px;
+    }
+
+    .comment-item .comment-text {
+      font-size: 0.85rem;
+      color: #444;
+      margin-top: 3px;
+      line-height: 1.4;
+    }
+
+    .comment-item .comment-delete {
+      font-size: 0.7rem;
+      color: #ccc;
+      background: none;
+      border: none;
+      cursor: pointer;
+      margin-left: 6px;
+    }
+
+    .comment-item .comment-delete:hover { color: #e74c3c; }
+
+    .comment-empty {
+      text-align: center;
+      color: #ccc;
+      font-size: 0.85rem;
+      padding: 40px 0;
+    }
+
+    .comment-form {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 12px 16px;
+      border-top: 1px solid #eee;
+    }
+
+    .comment-form input,
+    .comment-form textarea {
+      font-family: inherit;
+      font-size: 0.85rem;
+      padding: 8px 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .comment-form input:focus,
+    .comment-form textarea:focus {
+      border-color: #5a4a3a;
+    }
+
+    .comment-form textarea {
+      resize: none;
+      height: 60px;
+    }
+
+    .comment-form button {
+      align-self: flex-end;
+      padding: 6px 16px;
+      background: #5a4a3a;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .comment-form button:hover { background: #7a6a5a; }
+
+    @media (max-width: 768px) {
+      .lightbox-content {
+        flex-direction: column;
+        align-items: center;
+      }
+      .lightbox-content > img {
+        max-width: 90vw;
+        max-height: 50vh;
+      }
+      .comment-panel {
+        width: 90vw;
+        max-height: 35vh;
+      }
+    }
+
+    /* 갤러리 댓글 카운트 */
+    .comment-count {
+      font-size: 0.75rem;
+      color: #aaa;
+      margin-left: 4px;
+    }
+
+    /* 비어있을 때 */
+    .empty {
+      text-align: center;
+      padding: 80px 20px;
+      color: #aaa;
+    }
+
+    .empty span { font-size: 3rem; display: block; margin-bottom: 12px; }
+
+    /* 푸터 */
+    footer {
+      text-align: center;
+      padding: 32px 20px;
+      color: #bbb;
+      font-size: 0.78rem;
+      border-top: 1px solid #eee;
+      margin-top: 40px;
+    }
+
+    /* 반응형 */
+    @media (max-width: 600px) {
+      header h1 { font-size: 1.5rem; }
+      .gallery { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>꼬망이네 집</h1>
+  <p>우리 꼬망이의 일상을 기록합니다</p>
+  <nav>
+    <button class="active" data-filter="all">전체</button>
+    <button data-filter="daily">일상</button>
+    <button data-filter="walk">산책</button>
+    <button data-filter="sleep">잠자기</button>
+    <button data-filter="play">놀이</button>
+  </nav>
+</header>
+
+<div class="gallery" id="gallery"></div>
+
+<!-- 라이트박스 -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+  <button class="lightbox-nav lightbox-prev" onclick="navLightbox(-1)">&#8249;</button>
+  <div class="lightbox-content">
+    <img id="lightbox-img" src="" alt="">
+    <div class="comment-panel">
+      <div class="comment-panel-header" id="comment-header">댓글</div>
+      <div class="comment-list" id="comment-list"></div>
+      <div class="comment-form">
+        <input type="text" id="comment-name" placeholder="닉네임" maxlength="20">
+        <textarea id="comment-text" placeholder="댓글을 남겨주세요"></textarea>
+        <button onclick="addComment()">등록</button>
+      </div>
+    </div>
+  </div>
+  <button class="lightbox-nav lightbox-next" onclick="navLightbox(1)">&#8250;</button>
+</div>
+
+<footer>
+  &copy; 2026 꼬망이네 집 &mdash; 꼬망이를 사랑하는 집사가 만들었어요
+</footer>
+
+<script>
+// 꼬망이 실제 사진 데이터
+const photos = [
+  { id: 1,  src: "꼬망이 사진/Image_20260406_165945_886.jpeg", caption: "활짝 웃는 꼬망이",     category: "daily" },
+  { id: 2,  src: "꼬망이 사진/Image_20260406_165945_954.jpeg", caption: "잔디밭 위 미소",       category: "walk" },
+  { id: 3,  src: "꼬망이 사진/Image_20260406_165944_772.png",  caption: "줄무늬 옷 입고 산책",  category: "walk" },
+  { id: 4,  src: "꼬망이 사진/Image_20260406_165945_979.jpeg", caption: "벤치 위 포즈",         category: "walk" },
+  { id: 5,  src: "꼬망이 사진/Image_20260406_165945_026.jpeg", caption: "공원 벤치에서",        category: "walk" },
+  { id: 6,  src: "꼬망이 사진/Image_20260406_165945_847.jpeg", caption: "가을 산책길",          category: "walk" },
+  { id: 7,  src: "꼬망이 사진/Image_20260406_165946_772.jpeg", caption: "논밭 앞에서 씩씩하게", category: "walk" },
+  { id: 8,  src: "꼬망이 사진/Image_20260406_165948_207.jpeg", caption: "푸른 잔디 위에서",     category: "walk" },
+  { id: 9,  src: "꼬망이 사진/Image_20260406_165947_688.jpeg", caption: "가을 햇살 아래",       category: "walk" },
+  { id: 10, src: "꼬망이 사진/Image_20260406_165945_273.jpeg", caption: "별 무늬 옷 입고",      category: "walk" },
+  { id: 11, src: "꼬망이 사진/Image_20260406_165944_642.jpeg", caption: "드라이브 가자!",       category: "daily" },
+  { id: 12, src: "꼬망이 사진/Image_20260406_165945_660.jpeg", caption: "차 안에서 구경 중",    category: "daily" },
+  { id: 13, src: "꼬망이 사진/Image_20260406_165946_041.jpeg", caption: "졸린 눈",              category: "daily" },
+  { id: 14, src: "꼬망이 사진/Image_20260406_165946_010.jpeg", caption: "방긋 웃는 꼬망이",     category: "daily" },
+  { id: 15, src: "꼬망이 사진/Image_20260406_165945_521.jpeg", caption: "품에 안겨서",          category: "daily" },
+  { id: 16, src: "꼬망이 사진/Image_20260406_165944_893.jpeg", caption: "올려다보는 눈빛",      category: "daily" },
+  { id: 17, src: "꼬망이 사진/Image_20260406_165945_391.jpeg", caption: "바닥에 엎드려서",      category: "daily" },
+  { id: 18, src: "꼬망이 사진/Image_20260406_165945_149.jpeg", caption: "이불 속 꿀잠",         category: "sleep" },
+  { id: 19, src: "꼬망이 사진/Image_20260406_165945_379.jpeg", caption: "코 앞 클로즈업",       category: "sleep" },
+  { id: 20, src: "꼬망이 사진/Image_20260406_165948_574.jpeg", caption: "뒤집어서 자는 중",     category: "sleep" },
+];
+
+// 댓글 (localStorage)
+function getComments() {
+  return JSON.parse(localStorage.getItem("kkomangi_comments") || "{}");
+}
+
+function saveComments(comments) {
+  localStorage.setItem("kkomangi_comments", JSON.stringify(comments));
+}
+
+function addComment() {
+  const name = document.getElementById("comment-name").value.trim();
+  const text = document.getElementById("comment-text").value.trim();
+  if (!name || !text) return;
+
+  const photoId = filteredPhotos[currentLightboxIndex].id;
+  const comments = getComments();
+  if (!comments[photoId]) comments[photoId] = [];
+  comments[photoId].push({
+    name,
+    text,
+    time: new Date().toLocaleString("ko-KR"),
+    id: Date.now()
+  });
+  saveComments(comments);
+
+  document.getElementById("comment-name").value = "";
+  document.getElementById("comment-text").value = "";
+  renderComments(photoId);
+  render(currentFilter);
+}
+
+function deleteComment(photoId, commentId) {
+  const comments = getComments();
+  comments[photoId] = (comments[photoId] || []).filter(c => c.id !== commentId);
+  saveComments(comments);
+  renderComments(photoId);
+  render(currentFilter);
+}
+
+function renderComments(photoId) {
+  const comments = getComments();
+  const list = comments[photoId] || [];
+  const container = document.getElementById("comment-list");
+  const header = document.getElementById("comment-header");
+  header.textContent = `댓글 ${list.length > 0 ? "(" + list.length + ")" : ""}`;
+
+  if (list.length === 0) {
+    container.innerHTML = '<div class="comment-empty">아직 댓글이 없어요</div>';
+    return;
+  }
+
+  container.innerHTML = list.map(c => `
+    <div class="comment-item">
+      <span class="comment-author">${c.name}</span>
+      <span class="comment-time">${c.time}</span>
+      <button class="comment-delete" onclick="deleteComment(${photoId}, ${c.id})">삭제</button>
+      <div class="comment-text">${c.text}</div>
+    </div>
+  `).join("");
+  container.scrollTop = container.scrollHeight;
+}
+
+// 좋아요 상태 (localStorage)
+function getLikes() {
+  return JSON.parse(localStorage.getItem("kkomangi_likes") || "{}");
+}
+
+function toggleLike(id) {
+  const likes = getLikes();
+  likes[id] = !likes[id];
+  localStorage.setItem("kkomangi_likes", JSON.stringify(likes));
+  render(currentFilter);
+}
+
+// 갤러리 렌더링
+let currentFilter = "all";
+let currentLightboxIndex = -1;
+let filteredPhotos = [];
+
+function render(filter) {
+  currentFilter = filter;
+  const gallery = document.getElementById("gallery");
+  const likes = getLikes();
+
+  filteredPhotos = filter === "all" ? photos : photos.filter(p => p.category === filter);
+
+  if (filteredPhotos.length === 0) {
+    gallery.innerHTML = '<div class="empty"><span>📷</span>이 카테고리에는 아직 사진이 없어요</div>';
+    return;
+  }
+
+  const comments = getComments();
+  gallery.innerHTML = filteredPhotos.map((photo, idx) => {
+    const commentCount = (comments[photo.id] || []).length;
+    return `
+    <div class="gallery-item">
+      <img src="${photo.src}" alt="${photo.caption}" onclick="openLightbox(${idx})" loading="lazy">
+      <div class="caption">
+        <span>${photo.caption}${commentCount > 0 ? `<span class="comment-count"> (${commentCount})</span>` : ''}</span>
+        <button class="like-btn ${likes[photo.id] ? 'liked' : ''}" onclick="toggleLike(${photo.id})">
+          ${likes[photo.id] ? '❤️' : '🤍'}
+        </button>
+      </div>
+    </div>
+  `}).join("");
+}
+
+// 카테고리 필터
+document.querySelectorAll("nav button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    render(btn.dataset.filter);
+  });
+});
+
+// 라이트박스
+function openLightbox(idx) {
+  currentLightboxIndex = idx;
+  const photo = filteredPhotos[idx];
+  document.getElementById("lightbox-img").src = photo.src;
+  document.getElementById("lightbox").classList.add("open");
+  document.body.style.overflow = "hidden";
+  renderComments(photo.id);
+}
+
+function closeLightbox() {
+  document.getElementById("lightbox").classList.remove("open");
+  document.body.style.overflow = "";
+}
+
+function navLightbox(dir) {
+  currentLightboxIndex = (currentLightboxIndex + dir + filteredPhotos.length) % filteredPhotos.length;
+  const photo = filteredPhotos[currentLightboxIndex];
+  document.getElementById("lightbox-img").src = photo.src;
+  renderComments(photo.id);
+}
+
+document.getElementById("lightbox").addEventListener("click", (e) => {
+  if (e.target === e.currentTarget) closeLightbox();
+});
+
+document.addEventListener("keydown", (e) => {
+  if (!document.getElementById("lightbox").classList.contains("open")) return;
+  if (e.key === "Escape") closeLightbox();
+  if (e.key === "ArrowLeft") navLightbox(-1);
+  if (e.key === "ArrowRight") navLightbox(1);
+});
+
+// 초기 렌더링
+render("all");
+</script>
+
+</body>
+</html>
